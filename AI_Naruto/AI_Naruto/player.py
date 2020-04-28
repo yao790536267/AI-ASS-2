@@ -1,5 +1,181 @@
+import sys
+import json
+import queue
+import time
 
-class ExamplePlayer:
+from collections import Counter
+from AI_Naruto.util import print_move, print_boom, print_board, PriorityQueue
+
+STEP_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1)]
+BOOM_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1), (-1, +1), (+1, +1), (+1, -1), (-1, -1)]
+
+ALL_SQUARES = {(x, y) for x in range(8) for y in range(8)}
+
+BLACK_INITIAL_SQUARES = [(0, 7), (1, 7), (3, 7), (4, 7), (6, 7), (7, 7),
+                         (0,6), (1,6), (3,6), (4,6), (6,6), (7,6)]
+WHITE_INITIAL_SQUARES = [(0, 1), (1, 1), (3, 1), (4, 1), (6, 1), (7, 1),
+                         (0,0), (1,0), (3,0), (4,0), (6,0), (7,0)]
+
+def _NEAR_SQUARES(square):
+    x, y = square
+    return {(x-1,y+1),(x,y+1),(x+1,y+1),
+            (x-1,y),          (x+1,y),
+            (x-1,y-1),(x,y-1),(x+1,y-1)} & ALL_SQUARES
+
+class Board:
+
+    def __init__(self):
+        self.board = Counter({xy:0 for xy in ALL_SQUARES})
+        self.curent_white_dict = {}
+        self.curent_black_dict = {}
+
+        #白色用正数表示token数量，黑色用负数表示token数量
+        for xy in WHITE_INITIAL_SQUARES:
+            self.board[xy] += 1
+            self.curent_white_dict[xy] = 1
+
+        for xy in BLACK_INITIAL_SQUARES:
+            self.board[xy] -= 1
+            self.curent_black_dict[xy] = 1
+        self.score = {'white': 12, 'black': 12}
+
+    def update(self, color, action):
+        atype, *aargs = action
+        if atype == "MOVE":
+            n, a, b = aargs
+            n = -n if self.board[a] < 0 else n
+            self.board[a] -= n
+            self.board[b] += n
+            if color == 'white':
+                self.curent_white_dict[a] -= n
+                if b in self.curent_white_dict.keys():
+                    self.curent_white_dict[b] += n
+                else:
+                    self.curent_white_dict[b] = n
+
+            if color == 'black':
+                self.curent_black_dict[a] -= n
+                if b in self.curent_black_dict.keys():
+                    self.curent_black_dict[b] += n
+                else:
+                    self.curent_black_dict[b] = n
+
+        else:  # atype == "BOOM":
+            start_square, = aargs
+            to_boom = [start_square]
+            for boom_square in to_boom:
+                n = self.board[boom_square]
+                self.score["white" if n > 0 else "black"] -= abs(n)
+                self.board[boom_square] = 0
+                self.curent_white_dict.pop(boom_square)
+                self.curent_black_dict.pop(boom_square)
+                for near_square in _NEAR_SQUARES(boom_square):
+                    if self.board[near_square] != 0:
+                        to_boom.append(near_square)
+
+
+class State:
+    """
+    Game state. including a board, white (my_token) tokens and black (enemy) tokens.
+    """
+    def __init__(self, board, my_tokens, enemies):
+
+        self.board = board
+        self.enemies = enemies.copy()
+        self.my_tokens = my_tokens.copy()
+
+    def enemy_occupied(self, qr):
+        return qr in self.enemies
+
+    def get_legal_actions(self):
+        """
+        Get all legal next actions a white token can do.
+        """
+        legal_actions = []
+        for qr in self.my_tokens:
+            for step_directions_q, step_directions_r in STEP_DIRECTIONS:
+                p = self.my_tokens.get(qr)
+                q, r = qr
+                for i in range(1, p + 1):
+                    q_next = q + step_directions_q * i
+                    r_next = r + step_directions_r * i
+                    qr_next = q_next, r_next
+                    if qr_next in self.board:
+                        if not self.enemy_occupied(qr_next):
+                            # move i tokens from qr to qr_next, the remaining number of token in (q, r) will be p-i
+                            legal_actions.append(("MOVE", (i, qr, qr_next)))
+            legal_actions.append(("BOOM", qr))
+        return legal_actions
+
+    def successor_state(self, action):
+        """
+        Get the resulting state given the action
+        """
+        atype, aargs = action
+        new_state = State(self.board, self.my_tokens.copy(), self.enemies.copy())
+        if atype == 'MOVE':
+            i, qr, qr_next = aargs
+            if new_state.my_tokens.get(qr) == i:
+                del new_state.my_tokens[qr]
+                if new_state.my_tokens.get(qr_next) is None:
+                    new_state.my_tokens[qr_next] = i
+                else:
+                    new_state.my_tokens[qr_next] += i
+            else:
+                new_state.my_tokens[qr] -= i
+                if new_state.my_tokens.get(qr_next) is None:
+                    new_state.my_tokens[qr_next] = i
+                else:
+                    new_state.my_tokens[qr_next] += i
+
+        if atype == "BOOM":
+            qr = aargs
+            new_state = State(self.board, self.my_tokens.copy(), self.enemies.copy())
+            board_tokens = new_state.my_tokens.copy()
+            board_tokens.update(new_state.enemies)
+            boom_queue = queue.Queue()
+            boom_list = []
+            boom_queue.put((qr, 'white'))
+            boom_list.append((qr, 'white'))
+            while not boom_queue.empty():
+                boom_token = boom_queue.get()
+                q, r = boom_token[0]
+                for boom_directions_q, boom_directions_r in BOOM_DIRECTIONS:
+                    q_next_boom = q + boom_directions_q
+                    r_next_boom = r + boom_directions_r
+                    qr_next_boom = q_next_boom, r_next_boom
+                    if qr_next_boom in board_tokens and \
+                            (qr_next_boom, 'white') not in boom_list and \
+                            (qr_next_boom, 'black') not in boom_list:
+                        if qr_next_boom in new_state.my_tokens:
+                            boom_queue.put((qr_next_boom, 'white'))
+                            boom_list.append((qr_next_boom, 'white'))
+                        else:
+                            boom_queue.put((qr_next_boom, 'black'))
+                            boom_list.append((qr_next_boom, 'black'))
+            for token in boom_list:
+                qr, colour = token
+                if colour == 'white':
+                    del new_state.my_tokens[qr]
+                else:
+                    del new_state.enemies[qr]
+
+        return new_state
+
+    def is_goal(self):
+        """
+        The goal of the game is that no enemies on board
+        """
+        return len(self.enemies) == 0
+
+
+
+class AI_NarutoPlayer:
+
+    max_depth = 5  # the maximum depth that minimax algorithm explores
+    turns = 0  # current turn
+
+
     def __init__(self, colour):
         """
         This method is called once at the beginning of the game to initialise
@@ -12,6 +188,14 @@ class ExamplePlayer:
         strings "white" or "black" correspondingly.
         """
         # TODO: Set up state representation.
+
+        self.color = colour
+        self.board = Board()
+        if(self.color == 'white'):
+            self.opponent_color = 'black'
+        else:
+            self.opponent_color = 'white'
+
 
 
     def action(self):
@@ -46,3 +230,65 @@ class ExamplePlayer:
         against the game rules).
         """
         # TODO: Update state representation in response to action.
+
+        self.board.update(colour, action)
+
+    def get_heuristic(self):
+        return 1
+
+    def alphabeta(self, pos, current_depth, alpha, beta):
+        # increase depth
+        current_depth += 1
+
+        # if max depth is reached
+        if current_depth == self.max_depth:
+            # apply evaluation function
+            return self.get_heuristic()
+
+        if current_depth % 2 == 0:
+            # min player's turn
+            # loop all enemy pieces of our player
+            remaining_pieces = [p for p in self.enemy_pieces() if p.alive]
+            for piece in remaining_pieces:
+                posible_moves = pieces.move()
+                #check if the piece can move
+                if len(posible_moves) == 0:
+                    continue
+                else:
+                    for new_pos in posible_moves:
+                        old_pos = piece.pos
+                        #alpha beta pruning
+                        if alpha < beta:
+                            # move the piece into the aim square
+                            eliminated_pieces = piece.makemove(new_pos)
+                            current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
+                            # undo move
+                            piece.undomove(old_pos, eliminated_pieces)
+                            #update beta
+                            if beta > current_heuristic:
+                                beta = current_heuristic
+            return beta
+        else:
+            #max player's turn
+            #loop all friend pieces of our player
+            remaing_pieces = [p for p in self.friend_pieces() if p.alive]
+            for piece in remaing_pieces:
+                possible_moves = piece.moves()
+                #check if this piece can move
+                if len(possible_moves) == 0:
+                    continue
+                else:
+                    for new_pos in possible_moves:
+                        #record old_pos for undo
+                        old_pos = piece.pos
+                        #do alpha beta pruning
+                        if alpha < beta:
+                            #move the piece into the aim square
+                            eliminated_pieces = piece.makemove(new_pos)
+                            current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
+                            #undo move
+                            piece.undomove(old_pos, eliminated_pieces)
+                            #update alpha
+                            if alpha < current_heuristic:
+                                alpha = current_heuristic
+            return alpha
