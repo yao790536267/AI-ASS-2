@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="446a46a3-7b7e-4550-b48c-35aee7c08c63" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/AI_Naruto/AlphaBeta.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AI_Naruto/Board.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AI_Naruto/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/AI_Naruto/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AI_Naruto/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/AI_Naruto/player.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -44,11 +42,17 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1587896713143</updated>
-      <workItem from="1587896714650" duration="15198000" />
+      <workItem from="1587896714650" duration="31461000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="736" y="189" key="refactoring.ChangeSignatureDialog" timestamp="1588241161978">
+      <screen x="0" y="23" width="1792" height="1051" />
+    </state>
+    <state x="736" y="189" key="refactoring.ChangeSignatureDialog/1792.227.1130.811/0.23.1792.1051@0.23.1792.1051" timestamp="1588241161978" />
   </component>
 </project>
