@@ -24,79 +24,15 @@ def _NEAR_SQUARES(square):
             (x-1,y),          (x+1,y),
             (x-1,y-1),(x,y-1),(x+1,y-1)} & ALL_SQUARES
 
-def heuristic(state):
-    """
-    Heuristic function. Return the minimum manhattan distance
-    between one of white token and one of the black token.
-    Return 0 when no black (enemy) tokens on board.
-    """
-    dist = 2147483647
-    if len(state.enemies) == 0:
-        return 0
-
-    for my_token in state.my_tokens.keys():
-        for enemy_token in state.enemies.keys():
-            xy1 = my_token
-            xy2 = enemy_token
-            dist = min(dist, abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1]))
-    return dist
 
 class Board:
 
     def __init__(self, mycolor):
-        self.board = Counter({xy:0 for xy in ALL_SQUARES})
-        self.curent_white_dict = dict()
-        self.curent_black_dict = dict()
-        self.mycolor = mycolor
-
-        #白色用正数表示token数量，黑色用负数表示token数量
-        for xy in WHITE_INITIAL_SQUARES:
-            self.board[xy] += 1
-            self.curent_white_dict[xy] = 1
-
-        for xy in BLACK_INITIAL_SQUARES:
-            self.board[xy] -= 1
-            self.curent_black_dict[xy] = 1
-        self.score = {'white': 12, 'black': 12}
 
         # from part A
         edge = range(0, 8)
         self.blocks = sorted({(q, r) for q in edge for r in edge})
 
-#update the board
-    def update(self, color, action):
-        atype, *aargs = action
-        if atype == "MOVE":
-            n, a, b = aargs
-            n = -n if self.board[a] < 0 else n
-            self.board[a] -= n
-            self.board[b] += n
-            if color == 'white':
-                self.curent_white_dict[a] -= n
-                if b in self.curent_white_dict.keys():
-                    self.curent_white_dict[b] += n
-                else:
-                    self.curent_white_dict[b] = n
-
-            if color == 'black':
-                self.curent_black_dict[a] -= n
-                if b in self.curent_black_dict.keys():
-                    self.curent_black_dict[b] += n
-                else:
-                    self.curent_black_dict[b] = n
-
-        else:  # atype == "BOOM":
-            start_square, = aargs
-            to_boom = [start_square]
-            for boom_square in to_boom:
-                n = self.board[boom_square]
-                self.score["white" if n > 0 else "black"] -= abs(n)
-                self.board[boom_square] = 0
-                self.curent_white_dict.pop(boom_square)
-                self.curent_black_dict.pop(boom_square)
-                for near_square in _NEAR_SQUARES(boom_square):
-                    if self.board[near_square] != 0:
-                        to_boom.append(near_square)
 
     def __contains__(self, qr):
         return qr in self.blocks
@@ -105,36 +41,54 @@ class Board:
 # p, q, r => number of tokens in the stack,  x coodinate, y coordinate
 class State:
     """
-    Game state. including a board, white (my_token) tokens and black (enemy) tokens.
+    Game state. including a board, white tokens and black tokens.
     """
+    turn = None # current player, "white" or "black"
     board = None
-    enemies = None
-    my_tokens = None
+    black_tokens = None
+    white_tokens = None
+    tokens = None # current stack, >0 means white, <0 means black
 
-    def __init__(self, board, my_tokens, enemies):
+    def __init__(self, board, white_tokens, black_tokens):
 
         self.board = board
-        self.enemies = enemies.copy()
-        self.my_tokens = my_tokens.copy()
+        self.black_tokens = black_tokens.copy()
+        self.white_tokens = white_tokens.copy()
 
-    def enemy_occupied(self, qr):
-        return qr in self.enemies
+        self.tokens = Counter({xy:0 for xy in ALL_SQUARES})
+        for qr in self.black_tokens:
+            self.tokens[qr] = -self.black_tokens[qr]
+        for qr in self.white_tokens:
+            self.tokens[qr] = self.white_tokens[qr]
 
-    def get_legal_actions(self):
+    def enemy_occupied(self, qr, enemy_color):
+        if enemy_color == 'black':
+            return qr in self.black_tokens
+        else: #"black"
+            return qr in self.white_tokens
+
+    def get_legal_actions(self, color):
         """
         Get all legal next actions a white token can do.
         """
+        if color == "white":
+            enemy_color = "black"
+            my_tokens = self.white_tokens.copy()
+        else:
+            enemy_color = "white"
+            my_tokens = self.black_tokens.copy()
+
         legal_actions = []
-        for qr in self.my_tokens:
+        for qr in my_tokens:
             for step_directions_q, step_directions_r in STEP_DIRECTIONS:
-                p = self.my_tokens.get(qr)
+                p = my_tokens.get(qr)
                 q, r = qr
                 for i in range(1, p + 1):
                     q_next = q + step_directions_q * i
                     r_next = r + step_directions_r * i
                     qr_next = q_next, r_next
                     if qr_next in self.board:
-                        if not self.enemy_occupied(qr_next):
+                        if not self.enemy_occupied(qr_next, enemy_color):
                             # move i tokens from qr to qr_next, the remaining number of token in (q, r) will be p-i
                             legal_actions.append(("MOVE", (i, qr, qr_next)))
             legal_actions.append(("BOOM", qr))
@@ -145,31 +99,54 @@ class State:
         Get the resulting state given the action
         """
         atype, aargs = action
-        new_state = State(self.board, self.my_tokens.copy(), self.enemies.copy())
+        new_state = State(self.board, self.white_tokens.copy(), self.black_tokens.copy())
         if atype == 'MOVE':
             i, qr, qr_next = aargs
-            if new_state.my_tokens.get(qr) == i:
-                del new_state.my_tokens[qr]
-                if new_state.my_tokens.get(qr_next) is None:
-                    new_state.my_tokens[qr_next] = i
+            if self.tokens[qr] > 0: # white moves
+                if new_state.white_tokens.get(qr) == i:
+                    del new_state.white_tokens[qr]
+                    self.tokens = 0
+
                 else:
-                    new_state.my_tokens[qr_next] += i
-            else:
-                new_state.my_tokens[qr] -= i
-                if new_state.my_tokens.get(qr_next) is None:
-                    new_state.my_tokens[qr_next] = i
+                    new_state.white_tokens[qr] -= i
+                    self.tokens[qr] -= i
+                if new_state.white_tokens.get(qr_next) is None:
+                    new_state.white_tokens[qr_next] = i
+                    self.tokens[qr_next] = i
                 else:
-                    new_state.my_tokens[qr_next] += i
+                    new_state.white_tokens[qr_next] += i
+                    self.tokens[qr_next] += i
+
+            else: # black moves
+                if new_state.black_tokens.get(qr) == i:
+                    del new_state.black_tokens[qr]
+                    self.tokens[qr] = 0
+
+                else:
+                    new_state.black_tokens[qr] -= i
+                    self.tokens[qr] += i
+
+                if new_state.black_tokens.get(qr_next) is None:
+                    new_state.black_tokens[qr_next] = i
+                    self.tokens[qr_next] = -i
+                else:
+                    new_state.white_tokens[qr_next] += i
+                    self.tokens[qr_next] -= i
+
 
         if atype == "BOOM":
             qr = aargs
-            new_state = State(self.board, self.my_tokens.copy(), self.enemies.copy())
-            board_tokens = new_state.my_tokens.copy()
-            board_tokens.update(new_state.enemies)
+            new_state = State(self.board, self.white_tokens.copy(), self.black_tokens.copy())
+            board_tokens = new_state.white_tokens.copy()
+            board_tokens.update(new_state.black_tokens)
             boom_queue = queue.Queue()
             boom_list = []
-            boom_queue.put((qr, 'white'))
-            boom_list.append((qr, 'white'))
+            if self.tokens[qr] > 0:
+                boom_queue.put((qr, 'white'))
+                boom_list.append((qr, 'white'))
+            else:  # black
+                boom_queue.put((qr, 'black'))
+                boom_list.append((qr, 'black'))
             while not boom_queue.empty():
                 boom_token = boom_queue.get()
                 q, r = boom_token[0]
@@ -180,7 +157,7 @@ class State:
                     if qr_next_boom in board_tokens and \
                             (qr_next_boom, 'white') not in boom_list and \
                             (qr_next_boom, 'black') not in boom_list:
-                        if qr_next_boom in new_state.my_tokens:
+                        if qr_next_boom in new_state.white_tokens:
                             boom_queue.put((qr_next_boom, 'white'))
                             boom_list.append((qr_next_boom, 'white'))
                         else:
@@ -188,18 +165,14 @@ class State:
                             boom_list.append((qr_next_boom, 'black'))
             for token in boom_list:
                 qr, colour = token
+                new_state.tokens[qr] = 0
                 if colour == 'white':
-                    del new_state.my_tokens[qr]
+                    del new_state.white_tokens[qr]
                 else:
-                    del new_state.enemies[qr]
+                    del new_state.black_tokens[qr]
 
         return new_state
 
-    def is_goal(self):
-        """
-        The goal of the game is that no enemies on board
-        """
-        return len(self.enemies) == 0
 
 
 
