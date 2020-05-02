@@ -17,6 +17,7 @@ WHITE_INITIAL_SQUARES = [(0, 1), (1, 1), (3, 1), (4, 1), (6, 1), (7, 1),
                          (0,0), (1,0), (3,0), (4,0), (6,0), (7,0)]
 
 MAX_DEPTH = 5  # the maximum depth that minimax algorithm explores
+INFINITY = 2147438647
 
 def _NEAR_SQUARES(square):
     x, y = square
@@ -48,6 +49,8 @@ class State:
     black_tokens = None
     white_tokens = None
     tokens = None # current stack, >0 means white, <0 means black
+    actioned_color = None       # actioned color
+    next_action_color = None        # color which will action
 
     def __init__(self, board, white_tokens, black_tokens):
 
@@ -60,6 +63,24 @@ class State:
             self.tokens[qr] = -self.black_tokens[qr]
         for qr in self.white_tokens:
             self.tokens[qr] = self.white_tokens[qr]
+
+    # def __init__(self, board, white_tokens, black_tokens, actioned_color):
+    #
+    #     self.board = board
+    #     self.black_tokens = black_tokens.copy()
+    #     self.white_tokens = white_tokens.copy()
+    #
+    #     self.actioned_color = actioned_color
+    #     if actioned_color == "white":
+    #         self.next_action_color = "black"
+    #     else:
+    #         self.next_action_color = "white"
+    #
+    #     self.tokens = Counter({xy:0 for xy in ALL_SQUARES})
+    #     for qr in self.black_tokens:
+    #         self.tokens[qr] = -self.black_tokens[qr]
+    #     for qr in self.white_tokens:
+    #         self.tokens[qr] = self.white_tokens[qr]
 
     def enemy_occupied(self, qr, enemy_color):
         if enemy_color == 'black':
