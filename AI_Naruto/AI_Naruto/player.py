@@ -2,9 +2,9 @@ import sys
 import json
 import queue
 import time
+import AI_Naruto.util as util
 
 from collections import Counter
-from AI_Naruto.util import print_move, print_boom, print_board, PriorityQueue
 
 STEP_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1)]
 BOOM_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1), (-1, +1), (+1, +1), (+1, -1), (-1, -1)]
@@ -12,12 +12,12 @@ BOOM_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1), (-1, +1), (+1, +1), (
 ALL_SQUARES = {(x, y) for x in range(8) for y in range(8)}
 
 BLACK_INITIAL_SQUARES = [(0, 7), (1, 7), (3, 7), (4, 7), (6, 7), (7, 7),
-                         (0,6), (1,6), (3,6), (4,6), (6,6), (7,6)]
+                         (0, 6), (1, 6), (3, 6), (4, 6), (6, 6), (7, 6)]
 WHITE_INITIAL_SQUARES = [(0, 1), (1, 1), (3, 1), (4, 1), (6, 1), (7, 1),
-                         (0,0), (1,0), (3,0), (4,0), (6,0), (7,0)]
+                         (0, 0), (1, 0), (3, 0), (4, 0), (6, 0), (7, 0)]
 
 MAX_DEPTH = 5  # the maximum depth that minimax algorithm explores
-INFINITY = 2147438647
+
 
 def _NEAR_SQUARES(square):
     x, y = square
@@ -44,25 +44,31 @@ class State:
     """
     Game state. including a board, white tokens and black tokens.
     """
-    turn = None # current player, "white" or "black"
+    color = None # current player, "white" or "black"
     board = None
-    black_tokens = None
-    white_tokens = None
+    opponent_tokens = None
+    my_tokens = None
     tokens = None # current stack, >0 means white, <0 means black
     actioned_color = None       # actioned color
-    next_action_color = None        # color which will action
+    opponent_color = None        # color which will action
 
-    def __init__(self, board, white_tokens, black_tokens):
+    def __init__(self, color, board, my_tokens, opponent_tokens):
+
+        self.color = color
+        if self.color == 'white':
+            self.opponent_color = 'black'
+        else:
+            self.opponent_color = 'white'
 
         self.board = board
-        self.black_tokens = black_tokens.copy()
-        self.white_tokens = white_tokens.copy()
+        self.my_tokens = my_tokens.copy()
+        self.opponent_tokens = opponent_tokens.copy()
 
-        self.tokens = Counter({xy:0 for xy in ALL_SQUARES})
-        for qr in self.black_tokens:
-            self.tokens[qr] = -self.black_tokens[qr]
-        for qr in self.white_tokens:
-            self.tokens[qr] = self.white_tokens[qr]
+        # self.tokens = Counter({xy:0 for xy in ALL_SQUARES})
+        # for qr in self.black_tokens:
+        #     self.tokens[qr] = -self.black_tokens[qr]
+        # for qr in self.white_tokens:
+        #     self.tokens[qr] = self.white_tokens[qr]
 
     # def __init__(self, board, white_tokens, black_tokens, actioned_color):
     #
@@ -82,34 +88,38 @@ class State:
     #     for qr in self.white_tokens:
     #         self.tokens[qr] = self.white_tokens[qr]
 
-    def enemy_occupied(self, qr, enemy_color):
-        if enemy_color == 'black':
-            return qr in self.black_tokens
-        else: #"black"
-            return qr in self.white_tokens
+    # def enemy_occupied(self, qr, enemy_color):
+    #     if enemy_color == 'black':
+    #         return qr in self.black_tokens
+    #     else: #"black"
+    #         return qr in self.my_tokens
+
+    def opponent_occupied(self, qr):
+        return qr in self.opponent_tokens
 
     def get_legal_actions(self, color):
         """
         Get all legal next actions a white token can do.
         """
-        if color == "white":
-            enemy_color = "black"
-            my_tokens = self.white_tokens.copy()
-        else:
-            enemy_color = "white"
-            my_tokens = self.black_tokens.copy()
+        # if color == "white":
+        #     enemy_color = "black"
+        #     my_tokens = self.my_tokens.copy()
+        # else:
+        #     enemy_color = "white"
+        #     my_tokens = self.black_tokens.copy()
 
         legal_actions = []
-        for qr in my_tokens:
+        for qr in self.my_tokens:
             for step_directions_q, step_directions_r in STEP_DIRECTIONS:
-                p = my_tokens.get(qr)
+                p = self.my_tokens.get(qr)
                 q, r = qr
                 for i in range(1, p + 1):
                     q_next = q + step_directions_q * i
                     r_next = r + step_directions_r * i
                     qr_next = q_next, r_next
                     if qr_next in self.board:
-                        if not self.enemy_occupied(qr_next, enemy_color):
+                        #if not self.enemy_occupied(qr_next, enemy_color):
+                        if not self.opponent_occupied(qr_next):
                             # move i tokens from qr to qr_next, the remaining number of token in (q, r) will be p-i
                             legal_actions.append(("MOVE", (i, qr, qr_next)))
             legal_actions.append(("BOOM", qr))
@@ -119,55 +129,36 @@ class State:
         """
         Get the resulting state given the action
         """
+
         atype, aargs = action
-        new_state = State(self.board, self.white_tokens.copy(), self.black_tokens.copy())
+        my_tokens = self.my_tokens.copy()
+        opponent_tokens = self.opponent_tokens.copy()
+
         if atype == 'MOVE':
             i, qr, qr_next = aargs
-            if self.tokens[qr] > 0: # white moves
-                if new_state.white_tokens.get(qr) == i:
-                    del new_state.white_tokens[qr]
-                    self.tokens = 0
-
+            if my_tokens.get(qr) == i:
+                del my_tokens[qr]
+                if my_tokens.get(qr_next) is None:
+                    my_tokens[qr_next] = i
                 else:
-                    new_state.white_tokens[qr] -= i
-                    self.tokens[qr] -= i
-                if new_state.white_tokens.get(qr_next) is None:
-                    new_state.white_tokens[qr_next] = i
-                    self.tokens[qr_next] = i
+                    my_tokens[qr_next] += i
+            else:
+                my_tokens[qr] -= i
+                if my_tokens.get(qr_next) is None:
+                    my_tokens[qr_next] = i
                 else:
-                    new_state.white_tokens[qr_next] += i
-                    self.tokens[qr_next] += i
-
-            else: # black moves
-                if new_state.black_tokens.get(qr) == i:
-                    del new_state.black_tokens[qr]
-                    self.tokens[qr] = 0
-
-                else:
-                    new_state.black_tokens[qr] -= i
-                    self.tokens[qr] += i
-
-                if new_state.black_tokens.get(qr_next) is None:
-                    new_state.black_tokens[qr_next] = i
-                    self.tokens[qr_next] = -i
-                else:
-                    new_state.white_tokens[qr_next] += i
-                    self.tokens[qr_next] -= i
+                    my_tokens[qr_next] += i
 
 
         if atype == "BOOM":
             qr = aargs
-            new_state = State(self.board, self.white_tokens.copy(), self.black_tokens.copy())
-            board_tokens = new_state.white_tokens.copy()
-            board_tokens.update(new_state.black_tokens)
+
+            board_tokens = my_tokens.copy()
+            board_tokens.update(opponent_tokens)
             boom_queue = queue.Queue()
             boom_list = []
-            if self.tokens[qr] > 0:
-                boom_queue.put((qr, 'white'))
-                boom_list.append((qr, 'white'))
-            else:  # black
-                boom_queue.put((qr, 'black'))
-                boom_list.append((qr, 'black'))
+            boom_queue.put((qr, self.color))
+            boom_list.append((qr, self.color))
             while not boom_queue.empty():
                 boom_token = boom_queue.get()
                 q, r = boom_token[0]
@@ -176,38 +167,39 @@ class State:
                     r_next_boom = r + boom_directions_r
                     qr_next_boom = q_next_boom, r_next_boom
                     if qr_next_boom in board_tokens and \
-                            (qr_next_boom, 'white') not in boom_list and \
-                            (qr_next_boom, 'black') not in boom_list:
-                        if qr_next_boom in new_state.white_tokens:
-                            boom_queue.put((qr_next_boom, 'white'))
-                            boom_list.append((qr_next_boom, 'white'))
+                            (qr_next_boom, self.color) not in boom_list and \
+                            (qr_next_boom, self.opponent_color) not in boom_list:
+                        if qr_next_boom in my_tokens:
+                            boom_queue.put((qr_next_boom, self.color))
+                            boom_list.append((qr_next_boom, self.color))
                         else:
-                            boom_queue.put((qr_next_boom, 'black'))
-                            boom_list.append((qr_next_boom, 'black'))
+                            boom_queue.put((qr_next_boom, self.opponent_color))
+                            boom_list.append((qr_next_boom, self.opponent_color))
             for token in boom_list:
                 qr, colour = token
-                new_state.tokens[qr] = 0
-                if colour == 'white':
-                    del new_state.white_tokens[qr]
+                if colour == self.color:
+                    del my_tokens[qr]
                 else:
-                    del new_state.black_tokens[qr]
+                    del opponent_tokens[qr]
 
+        #Next state's my_tokens is this state's opponent_tokens
+        new_state = State(self.opponent_color, self.board, self.opponent_tokens.copy(), self.my_tokens.copy())
         return new_state
 
-
-
-
-
+    def print_board(self):
+        my_tokens = self.my_tokens.copy()
+        opponent_tokens = self.opponent_tokens.copy()
+        board_tokens = my_tokens.copy()
+        board_tokens.update(opponent_tokens)
+        util.print_board(board_tokens)
 
 class AI_NarutoPlayer:
-
 
     turns = 0  # current turn
     color = None
     opponent_color = None
     board = None
     state = None
-
 
     def __init__(self, colour):
         """
@@ -223,21 +215,32 @@ class AI_NarutoPlayer:
         # TODO: Set up state representation.
 
         self.color = colour
+        whiteInput = BLACK_INITIAL_SQUARES
+        blackInput = WHITE_INITIAL_SQUARES
+        white = dict()
+        black = dict()
+        for token in whiteInput:
+            q, r = token
+            white[(q, r)] = 1
+        for token in blackInput:
+            q, r = token
+            black[(q, r)] = 1
+
         self.board = Board(self.color)
+
         if(self.color == 'white'):
             self.opponent_color = 'black'
-            self.init_my_tokens = self.board.curent_white_dict.copy()
-            self.init_opponent_tokens = self.board.curent_black_dict.copy()
+            self.init_my_tokens = white
+            self.init_opponent_tokens = black
         else:
             self.opponent_color = 'white'
-            self.init_my_tokens = self.board.curent_black_dict.copy()
-            self.init_opponent_tokens = self.board.curent_white_dict.copy()
+            self.init_my_tokens = black
+            self.init_opponent_tokens = white
 
         # initialise state
-        self.state = State(self.board, self.init_my_tokens, self.init_opponent_tokens)
-
-
-
+        # White tokens go first
+        self.state = State('white', self.board, self.init_my_tokens, self.init_opponent_tokens)
+        self.state.print_board()
 
     def action(self):
         """
@@ -274,22 +277,22 @@ class AI_NarutoPlayer:
 
         self.board.update(colour, action)
 
-    def get_possible_moves(self, token):
-        possible_moves = []
-        for step_directions_q, step_directions_r in STEP_DIRECTIONS:
-            p = self.my_tokens.get(token)
-            q, r = token
-            for i in range(1, p + 1):
-                q_next = q + step_directions_q * i
-                r_next = r + step_directions_r * i
-                qr_next = q_next, r_next
-                if qr_next in self.board:
-                    if not self.enemy_occupied(qr_next):
-                        # move i tokens from qr to qr_next, the remaining number of token in (q, r) will be p-i
-                        possible_moves.append(("MOVE", (i, token, qr_next)))
-        # possible_moves.append(("BOOM", token))
-
-        return possible_moves
+    # def get_possible_moves(self, token):
+    #     possible_moves = []
+    #     for step_directions_q, step_directions_r in STEP_DIRECTIONS:
+    #         p = self.my_tokens.get(token)
+    #         q, r = token
+    #         for i in range(1, p + 1):
+    #             q_next = q + step_directions_q * i
+    #             r_next = r + step_directions_r * i
+    #             qr_next = q_next, r_next
+    #             if qr_next in self.board:
+    #                 if not self.enemy_occupied(qr_next):
+    #                     # move i tokens from qr to qr_next, the remaining number of token in (q, r) will be p-i
+    #                     possible_moves.append(("MOVE", (i, token, qr_next)))
+    #     # possible_moves.append(("BOOM", token))
+    #
+    #     return possible_moves
 
     def alphabeta(self, pos, current_depth, alpha, beta):
         # increase depth
