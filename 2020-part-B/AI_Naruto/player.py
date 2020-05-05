@@ -97,7 +97,7 @@ class State:
     def opponent_occupied(self, qr):
         return qr in self.opponent_tokens
 
-    def get_legal_actions(self, color):
+    def get_legal_actions(self):
         """
         Get all legal next actions a white token can do.
         """
@@ -183,7 +183,7 @@ class State:
                     del opponent_tokens[qr]
 
         #Next state's my_tokens is this state's opponent_tokens
-        new_state = State(self.opponent_color, self.board, self.opponent_tokens.copy(), self.my_tokens.copy())
+        new_state = State(self.opponent_color, self.board, opponent_tokens.copy(), my_tokens.copy())
         return new_state
 
     def print_board(self):
@@ -208,7 +208,7 @@ class AI_NarutoPlayer:
         representation of the game state, and any other information about the 
         game state you would like to maintain for the duration of the game.
 
-        The parameter colour will be a string representing the player your 
+        The parameter colour will be a string representing the player your
         program will play as (White or Black). The value will be one of the 
         strings "white" or "black" correspondingly.
         """
@@ -247,18 +247,30 @@ class AI_NarutoPlayer:
         This method is called at the beginning of each of your turns to request 
         a choice of action from your program.
 
-        Based on the current state of the game, your player should select and 
+        Based on the current state of the game, your player should select and
         return an allowed action to play on this turn. The action must be
         represented based on the spec's instructions for representing actions.
         """
         # TODO: Decide what action to take, and return it
-        return ("BOOM", (0, 0))
+        alpha = float("-inf")
+        beta = float("inf")
+        actions = self.state.get_legal_actions()
+        for action in actions:
+            successor_state = self.state.successor_state(action)
+            current_eva_value = self.alphabeta(successor_state, 1, alpha, beta)
+            if current_eva_value > alpha:
+                # update evaluation
+                alpha = current_eva_value
+                # record the square the piece moves into
+                best_action = action
+
+        return best_action
 
 
     def update(self, colour, action):
         """
-        This method is called at the end of every turn (including your player’s 
-        turns) to inform your player about the most recent action. You should 
+        This method is called at the end of every turn (including your player’s
+        turns) to inform your player about the most recent action. You should
         use this opportunity to maintain your internal representation of the 
         game state and any other information about the game you are storing.
 
@@ -275,7 +287,7 @@ class AI_NarutoPlayer:
         """
         # TODO: Update state representation in response to action.
 
-        self.board.update(colour, action)
+        self.state = self.state.successor_state(action)
 
     # def get_possible_moves(self, token):
     #     possible_moves = []
@@ -294,60 +306,105 @@ class AI_NarutoPlayer:
     #
     #     return possible_moves
 
-    def alphabeta(self, pos, current_depth, alpha, beta):
+    def evaluation_function(self, current_state):
+        my_tokens = self.state.my_tokens
+        enemy_tokens = self. state.opponent_tokens
+        value = len(my_tokens) - len(enemy_tokens)
+        return value
+
+    def alphabeta(self, current_state, current_depth, alpha, beta):
         # increase depth
         current_depth += 1
+
+        # record actions in a path
+        moves = []
 
         # if max depth is reached
         if current_depth == MAX_DEPTH:
             # apply evaluation function
-            return self.get_heuristic()
+            return self.evaluation_function(current_state)
 
         if current_depth % 2 == 0:
-            # min player's turn
-            # loop all enemy pieces of our player
-            remaining_pieces = self.enemies
-            for token in remaining_pieces:
-                posible_actions = self.get_possible_moves(token)
-                #check if the piece can move
-                if len(posible_actions) == 0:
-                    continue
-                else:
-                    for new_pos in posible_actions:
-                        old_pos = token.pos
-                        #alpha beta pruning
-                        if alpha < beta:
-                            # move the piece into the aim square
-                            eliminated_pieces = token.makemove(new_pos)
-                            current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
-                            # undo move
-                            token.undomove(old_pos, eliminated_pieces)
-                            #update beta
-                            if beta > current_heuristic:
-                                beta = current_heuristic
+            # min player's turn (enemy)
+            legal_actiions = current_state.get_legal_actions()
+
+            for action in legal_actiions:
+                # current_state = current_state.successor_state(action)
+                # new_state = State(current_state.opponent_color, current_state.board, current_state.opponent_tokens, current_state.my_tokens)
+                # alpha beta pruning
+                if alpha < beta:
+                    moves.append(action)
+                    new_state = current_state.successor_state(action)
+                    new_state = State(new_state.color, new_state.board, new_state.my_tokens,
+                                      new_state.opponent_tokens)
+                    current_evaluation_value = self.alphabeta(new_state, current_depth, alpha, beta)
+                    # update beta
+                    if beta > current_evaluation_value:
+                        beta = current_evaluation_value
             return beta
         else:
             #max player's turn
-            #loop all friend pieces of our player
-            remaing_pieces = [p for p in self.friend_pieces() if p.alive]
-            for token in remaing_pieces:
-                possible_moves = token.moves()
-                #check if this piece can move
-                if len(possible_moves) == 0:
-                    continue
-                else:
-                    for new_pos in possible_moves:
-                        #record old_pos for undo
-                        old_pos = token.pos
-                        #do alpha beta pruning
-                        if alpha < beta:
-                            #move the piece into the aim square
-                            eliminated_pieces = token.makemove(new_pos)
-                            current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
-                            #undo move
-                            token.undomove(old_pos, eliminated_pieces)
-                            #update alpha
-                            if alpha < current_heuristic:
-                                alpha = current_heuristic
+            legal_actiions = current_state.get_legal_actions()
+
+            for action in legal_actiions:
+
+                # alpha beta pruning
+                if alpha < beta:
+                    moves.append(action)
+                    new_state = current_state.successor_state(action)
+                    new_state = State(new_state.color, new_state.board, new_state.my_tokens,
+                                      new_state.opponent_tokens)
+                    current_evaluation_value = self.alphabeta(new_state, current_depth, alpha, beta)
+                    # update beta
+                    if alpha < current_evaluation_value:
+                        alpha = current_evaluation_value
             return alpha
+
+        # if current_depth % 2 == 0:
+        #     # min player's turn
+        #     # loop all enemy pieces of our player
+        #     remaining_pieces = self.enemies
+        #     for token in remaining_pieces:
+        #         posible_actions = self.get_possible_moves(token)
+        #         #check if the piece can move
+        #         if len(posible_actions) == 0:
+        #             continue
+        #         else:
+        #             for new_pos in posible_actions:
+        #                 old_pos = token.pos
+        #                 #alpha beta pruning
+        #                 if alpha < beta:
+        #                     # move the piece into the aim square
+        #                     eliminated_pieces = token.makemove(new_pos)
+        #                     current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
+        #                     # undo move
+        #                     token.undomove(old_pos, eliminated_pieces)
+        #                     #update beta
+        #                     if beta > current_heuristic:
+        #                         beta = current_heuristic
+        #     return beta
+        # else:
+        #     #max player's turn
+        #     #loop all friend pieces of our player
+        #     remaing_pieces = [p for p in self.friend_pieces() if p.alive]
+        #     for token in remaing_pieces:
+        #         possible_moves = token.moves()
+        #         #check if this piece can move
+        #         if len(possible_moves) == 0:
+        #             continue
+        #         else:
+        #             for new_pos in possible_moves:
+        #                 #record old_pos for undo
+        #                 old_pos = token.pos
+        #                 #do alpha beta pruning
+        #                 if alpha < beta:
+        #                     #move the piece into the aim square
+        #                     eliminated_pieces = token.makemove(new_pos)
+        #                     current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
+        #                     #undo move
+        #                     token.undomove(old_pos, eliminated_pieces)
+        #                     #update alpha
+        #                     if alpha < current_heuristic:
+        #                         alpha = current_heuristic
+        #     return alpha
 
