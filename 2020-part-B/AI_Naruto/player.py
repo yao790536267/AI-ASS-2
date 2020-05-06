@@ -186,6 +186,41 @@ class State:
         new_state = State(self.opponent_color, self.board, opponent_tokens.copy(), my_tokens.copy())
         return new_state
 
+    def evaluation(self):
+        score = 0
+        my_token_number = 0
+        opponent_token_number = 0
+        my_token_average_x = 0
+        my_token_average_y = 0
+        opponent_token_average_x = 0
+        opponent_token_average_y = 0
+
+        for key in self.my_tokens.keys():
+            my_token_number += self.my_tokens[key]
+            x, y = key
+            my_token_average_x += x
+            my_token_average_y += y
+
+        for key in self.opponent_tokens.keys():
+            opponent_token_number += self.opponent_tokens[key]
+            x, y = key
+            opponent_token_average_x += x
+            opponent_token_average_y += y
+
+        #calculate the weight centers of tokens on both sides
+        my_token_average_x /= my_token_number
+        my_token_average_y /= my_token_number
+        opponent_token_average_x /= opponent_token_number
+        opponent_token_average_y /= opponent_token_number
+
+        #calculate the distance of two weight centers
+        distance = (my_token_average_x - opponent_token_average_x) * (my_token_average_x - opponent_token_average_x) \
+                   + (my_token_average_y - opponent_token_average_y) * (my_token_average_y - opponent_token_average_y)
+
+        score = my_token_number + (12 - opponent_token_number) - 0.1*distance
+        return score
+
+
     def print_board(self):
         my_tokens = self.my_tokens.copy()
         opponent_tokens = self.opponent_tokens.copy()
@@ -267,9 +302,13 @@ class AI_NarutoPlayer:
                 best_action = action
 
         atype, aargs = best_action
-        p, q, r = aargs
-        best_action = atype, p, q, r
-        return best_action
+        if atype == 'MOVE':
+            p, q, r = aargs
+            best_action = atype, p, q, r
+            return best_action
+        else:
+            best_action = atype, aargs
+            return best_action
 
 
     def update(self, colour, action):
@@ -291,10 +330,14 @@ class AI_NarutoPlayer:
         against the game rules).
         """
         # TODO: Update state representation in response to action.
-        atype, p, q, r = action
-        aargs = p, q, r
-        action = atype, aargs
-        self.state = self.state.successor_state(action)
+        atype = action[0]
+        if atype == 'MOVE':
+            atype, p, q, r = action
+            aargs = p, q, r
+            action = atype, aargs
+            self.state = self.state.successor_state(action)
+        else:
+            self.state = self.state.successor_state(action)
 
     # def get_possible_moves(self, token):
     #     possible_moves = []
@@ -313,41 +356,50 @@ class AI_NarutoPlayer:
     #
     #     return possible_moves
 
-    def evaluation_function(self, last_state, current_state):
-        old_my_tokens = last_state.my_tokens
-        new_my_tokens = current_state.opponent_tokens
-        old_opponent_tokens = last_state.opponent_tokens
-        new_opponent_tokens = current_state.my_tokens
-
-        change_of_opponent_tokens = len(old_opponent_tokens) - len(new_opponent_tokens)         #feature 1
-
-        # feature 2
-        min_distance_difference = 0
-        changed_keys_my = old_my_tokens.keys() - new_my_tokens.keys()
-        min_distance_difference1 = 0
-        if len(changed_keys_my) > 0:
-            for token in changed_keys_my:
-                old_min_distance = sys.maxsize
-                for oppo_token in old_opponent_tokens:
-                    distance = self.manhatten_distance(token, oppo_token)
-                    if distance < old_min_distance:
-                        old_min_distance = distance
-                min_distance_difference1 += old_min_distance
-
-        changed_keys2_my = new_my_tokens.keys() - old_my_tokens.keys()
-        min_distance_difference2 = 0
-        if len(changed_keys2_my) > 0:
-            for token in changed_keys2_my:
-                old_min_distance = sys.maxsize
-                for oppo_token in old_opponent_tokens:
-                    distance = self.manhatten_distance(token, oppo_token)
-                    if distance < old_min_distance:
-                        old_min_distance = distance
-                min_distance_difference2 += old_min_distance
-        min_distance_difference = min_distance_difference1 - min_distance_difference2
-
-        value = -10 * change_of_opponent_tokens + -1 * min_distance_difference
-        return value
+    # def evaluation_function(self, last_state, current_state):
+    #     old_my_tokens = last_state.my_tokens
+    #     new_my_tokens = current_state.opponent_tokens
+    #     old_opponent_tokens = last_state.opponent_tokens
+    #     new_opponent_tokens = current_state.my_tokens
+    #
+    #     old_opponent_token_number = 0
+    #     new_opponent_token_number = 0
+    #     for key in old_opponent_tokens.keys():
+    #         old_opponent_token_number += old_opponent_tokens[key]
+    #
+    #     for key in new_opponent_tokens.keys():
+    #         new_opponent_token_number += new_opponent_tokens[key]
+    #
+    #     #change_of_opponent_tokens = len(old_opponent_tokens) - len(new_opponent_tokens)         #feature 1
+    #     change_of_opponent_tokens = old_opponent_token_number - new_opponent_token_number
+    #
+    #     # feature 2
+    #     min_distance_difference = 0
+    #     changed_keys_my = old_my_tokens.keys() - new_my_tokens.keys()
+    #     min_distance_difference1 = 0
+    #     if len(changed_keys_my) > 0:
+    #         for token in changed_keys_my:
+    #             old_min_distance = sys.maxsize
+    #             for oppo_token in old_opponent_tokens:
+    #                 distance = self.manhatten_distance(token, oppo_token)
+    #                 if distance < old_min_distance:
+    #                     old_min_distance = distance
+    #             min_distance_difference1 += old_min_distance
+    #
+    #     changed_keys2_my = new_my_tokens.keys() - old_my_tokens.keys()
+    #     min_distance_difference2 = 0
+    #     if len(changed_keys2_my) > 0:
+    #         for token in changed_keys2_my:
+    #             old_min_distance = sys.maxsize
+    #             for oppo_token in old_opponent_tokens:
+    #                 distance = self.manhatten_distance(token, oppo_token)
+    #                 if distance < old_min_distance:
+    #                     old_min_distance = distance
+    #             min_distance_difference2 += old_min_distance
+    #     min_distance_difference = min_distance_difference1 - min_distance_difference2
+    #
+    #     value = 100 * change_of_opponent_tokens + -1 * min_distance_difference
+    #     return value
 
     def manhatten_distance(self, token, token2):
         x, y = token
@@ -359,19 +411,26 @@ class AI_NarutoPlayer:
         # increase depth
         current_depth += 1
 
+        #detect game over state
+        if len(current_state.opponent_tokens) == 0:
+            return 999
+        if len(current_state.my_tokens) == 0:
+            return -999
+
         # record actions in a path
         moves = []
 
         # if max depth is reached
         if current_depth == MAX_DEPTH:
             # apply evaluation function
-            return self.evaluation_function(last_state, current_state)
+            #return self.evaluation_function(last_state, current_state)
+            return current_state.evaluation()
 
         if current_depth % 2 == 0:
             # min player's turn (enemy)
-            legal_actiions = current_state.get_legal_actions()
+            legal_actions = current_state.get_legal_actions()
 
-            for action in legal_actiions:
+            for action in legal_actions:
                 # current_state = current_state.successor_state(action)
                 # new_state = State(current_state.opponent_color, current_state.board, current_state.opponent_tokens, current_state.my_tokens)
                 # alpha beta pruning
@@ -387,9 +446,9 @@ class AI_NarutoPlayer:
             return beta
         else:
             #max player's turn
-            legal_actiions = current_state.get_legal_actions()
+            legal_actions = current_state.get_legal_actions()
 
-            for action in legal_actiions:
+            for action in legal_actions:
 
                 # alpha beta pruning
                 if alpha < beta:
