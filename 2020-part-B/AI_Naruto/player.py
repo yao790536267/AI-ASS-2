@@ -215,8 +215,8 @@ class AI_NarutoPlayer:
         # TODO: Set up state representation.
 
         self.color = colour
-        whiteInput = BLACK_INITIAL_SQUARES
-        blackInput = WHITE_INITIAL_SQUARES
+        whiteInput = WHITE_INITIAL_SQUARES
+        blackInput = BLACK_INITIAL_SQUARES
         white = dict()
         black = dict()
         for token in whiteInput:
@@ -228,19 +228,21 @@ class AI_NarutoPlayer:
 
         self.board = Board(self.color)
 
-        if(self.color == 'white'):
-            self.opponent_color = 'black'
-            self.init_my_tokens = white
-            self.init_opponent_tokens = black
-        else:
-            self.opponent_color = 'white'
-            self.init_my_tokens = black
-            self.init_opponent_tokens = white
+        # if(self.color == 'white'):
+        #     self.opponent_color = 'black'
+        #     self.init_my_tokens = white
+        #     self.init_opponent_tokens = black
+        # else:
+        #     self.opponent_color = 'white'
+        #     self.init_my_tokens = black
+        #     self.init_opponent_tokens = white
 
+        self.init_my_tokens = white
+        self.init_opponent_tokens = black
         # initialise state
         # White tokens go first
         self.state = State('white', self.board, self.init_my_tokens, self.init_opponent_tokens)
-        self.state.print_board()
+        #self.state.print_board()
 
     def action(self):
         """
@@ -264,6 +266,9 @@ class AI_NarutoPlayer:
                 # record the square the piece moves into
                 best_action = action
 
+        atype, aargs = best_action
+        p, q, r = aargs
+        best_action = atype, p, q, r
         return best_action
 
 
@@ -286,7 +291,9 @@ class AI_NarutoPlayer:
         against the game rules).
         """
         # TODO: Update state representation in response to action.
-
+        atype, p, q, r = action
+        aargs = p, q, r
+        action = atype, aargs
         self.state = self.state.successor_state(action)
 
     # def get_possible_moves(self, token):
