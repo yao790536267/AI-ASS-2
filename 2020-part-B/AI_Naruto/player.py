@@ -259,7 +259,7 @@ class AI_NarutoPlayer:
         actions = self.state.get_legal_actions()
         for action in actions:
             successor_state = self.state.successor_state(action)
-            current_eva_value = self.alphabeta(successor_state, 1, alpha, beta)
+            current_eva_value = self.alphabeta(self.state, successor_state, 1, alpha, beta)
             if current_eva_value > alpha:
                 # update evaluation
                 alpha = current_eva_value
@@ -313,13 +313,49 @@ class AI_NarutoPlayer:
     #
     #     return possible_moves
 
-    def evaluation_function(self, current_state):
-        my_tokens = self.state.my_tokens
-        enemy_tokens = self. state.opponent_tokens
-        value = len(my_tokens) - len(enemy_tokens)
+    def evaluation_function(self, last_state, current_state):
+        old_my_tokens = last_state.my_tokens
+        new_my_tokens = current_state.opponent_tokens
+        old_opponent_tokens = last_state.opponent_tokens
+        new_opponent_tokens = current_state.my_tokens
+
+        change_of_opponent_tokens = len(old_opponent_tokens) - len(new_opponent_tokens)         #feature 1
+
+        # feature 2
+        min_distance_difference = 0
+        changed_keys_my = old_my_tokens.keys() - new_my_tokens.keys()
+        min_distance_difference1 = 0
+        if len(changed_keys_my) > 0:
+            for token in changed_keys_my:
+                old_min_distance = sys.maxsize
+                for oppo_token in old_opponent_tokens:
+                    distance = self.manhatten_distance(token, oppo_token)
+                    if distance < old_min_distance:
+                        old_min_distance = distance
+                min_distance_difference1 += old_min_distance
+
+        changed_keys2_my = new_my_tokens.keys() - old_my_tokens.keys()
+        min_distance_difference2 = 0
+        if len(changed_keys2_my) > 0:
+            for token in changed_keys2_my:
+                old_min_distance = sys.maxsize
+                for oppo_token in old_opponent_tokens:
+                    distance = self.manhatten_distance(token, oppo_token)
+                    if distance < old_min_distance:
+                        old_min_distance = distance
+                min_distance_difference2 += old_min_distance
+        min_distance_difference = min_distance_difference1 - min_distance_difference2
+
+        value = -10 * change_of_opponent_tokens + -1 * min_distance_difference
         return value
 
-    def alphabeta(self, current_state, current_depth, alpha, beta):
+    def manhatten_distance(self, token, token2):
+        x, y = token
+        x2, y2 = token2
+        distance = abs(x - x2) + abs(y - y2)
+        return distance
+
+    def alphabeta(self, last_state, current_state, current_depth, alpha, beta):
         # increase depth
         current_depth += 1
 
@@ -329,7 +365,7 @@ class AI_NarutoPlayer:
         # if max depth is reached
         if current_depth == MAX_DEPTH:
             # apply evaluation function
-            return self.evaluation_function(current_state)
+            return self.evaluation_function(last_state, current_state)
 
         if current_depth % 2 == 0:
             # min player's turn (enemy)
@@ -344,7 +380,7 @@ class AI_NarutoPlayer:
                     new_state = current_state.successor_state(action)
                     new_state = State(new_state.color, new_state.board, new_state.my_tokens,
                                       new_state.opponent_tokens)
-                    current_evaluation_value = self.alphabeta(new_state, current_depth, alpha, beta)
+                    current_evaluation_value = self.alphabeta(current_state, new_state, current_depth, alpha, beta)
                     # update beta
                     if beta > current_evaluation_value:
                         beta = current_evaluation_value
@@ -361,7 +397,7 @@ class AI_NarutoPlayer:
                     new_state = current_state.successor_state(action)
                     new_state = State(new_state.color, new_state.board, new_state.my_tokens,
                                       new_state.opponent_tokens)
-                    current_evaluation_value = self.alphabeta(new_state, current_depth, alpha, beta)
+                    current_evaluation_value = self.alphabeta(current_state, new_state, current_depth, alpha, beta)
                     # update beta
                     if alpha < current_evaluation_value:
                         alpha = current_evaluation_value

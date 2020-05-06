@@ -2,22 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="446a46a3-7b7e-4550-b48c-35aee7c08c63" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../2020-part-B/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../2020-part-B/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/AI_Naruto.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/.idea/2020-part-B.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AI_Naruto/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/AI_Naruto/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AI_Naruto/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/AI_Naruto/player.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AI_Naruto/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/AI_Naruto/util.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/referee/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/referee/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/referee/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/referee/game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/referee/log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/referee/log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/referee/options.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/referee/options.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/referee/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/referee/player.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../2020-part-B/.idea/2020-part-B.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/.idea/2020-part-B.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../2020-part-B/AI_Naruto/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/../2020-part-B/AI_Naruto/player.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,10 +36,10 @@
   <component name="PropertiesComponent">
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.run partB">
     <configuration name="referee help" type="PythonConfigurationType" factoryName="Python">
@@ -117,7 +104,9 @@
       <workItem from="1587896714650" duration="40033000" />
       <workItem from="1588327265263" duration="9199000" />
       <workItem from="1588598527726" duration="9871000" />
-      <workItem from="1588684569832" duration="623000" />
+      <workItem from="1588684569832" duration="2035000" />
+      <workItem from="1588693047774" duration="21000" />
+      <workItem from="1588725348641" duration="5889000" />
     </task>
     <servers />
   </component>
@@ -135,29 +124,29 @@
       <screen x="0" y="23" width="1792" height="1049" />
     </state>
     <state x="584" y="292" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/265.-811.1130.811/0.23.1792.1049@0.23.1792.1049" timestamp="1588598432171" />
-    <state width="1750" height="353" key="GridCell.Tab.0.bottom" timestamp="1588684559521">
+    <state width="1750" height="155" key="GridCell.Tab.0.bottom" timestamp="1588772205244">
       <screen x="0" y="23" width="1792" height="1047" />
     </state>
     <state width="1750" height="242" key="GridCell.Tab.0.bottom/0.23.1792.1049@0.23.1792.1049" timestamp="1588654178468" />
-    <state width="1750" height="353" key="GridCell.Tab.0.bottom/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588684559521" />
+    <state width="1750" height="155" key="GridCell.Tab.0.bottom/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588772205244" />
     <state width="1750" height="242" key="GridCell.Tab.0.bottom/265.-811.1130.811/0.23.1792.1049@0.23.1792.1049" timestamp="1588654949812" />
-    <state width="1750" height="353" key="GridCell.Tab.0.center" timestamp="1588684559521">
+    <state width="1750" height="155" key="GridCell.Tab.0.center" timestamp="1588772205244">
       <screen x="0" y="23" width="1792" height="1047" />
     </state>
     <state width="1750" height="242" key="GridCell.Tab.0.center/0.23.1792.1049@0.23.1792.1049" timestamp="1588654178468" />
-    <state width="1750" height="353" key="GridCell.Tab.0.center/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588684559521" />
+    <state width="1750" height="155" key="GridCell.Tab.0.center/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588772205244" />
     <state width="1750" height="242" key="GridCell.Tab.0.center/265.-811.1130.811/0.23.1792.1049@0.23.1792.1049" timestamp="1588654949811" />
-    <state width="1750" height="353" key="GridCell.Tab.0.left" timestamp="1588684559520">
+    <state width="1750" height="155" key="GridCell.Tab.0.left" timestamp="1588772205243">
       <screen x="0" y="23" width="1792" height="1047" />
     </state>
     <state width="1750" height="242" key="GridCell.Tab.0.left/0.23.1792.1049@0.23.1792.1049" timestamp="1588654178467" />
-    <state width="1750" height="353" key="GridCell.Tab.0.left/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588684559520" />
+    <state width="1750" height="155" key="GridCell.Tab.0.left/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588772205243" />
     <state width="1750" height="242" key="GridCell.Tab.0.left/265.-811.1130.811/0.23.1792.1049@0.23.1792.1049" timestamp="1588654949811" />
-    <state width="1750" height="353" key="GridCell.Tab.0.right" timestamp="1588684559521">
+    <state width="1750" height="155" key="GridCell.Tab.0.right" timestamp="1588772205244">
       <screen x="0" y="23" width="1792" height="1047" />
     </state>
     <state width="1750" height="242" key="GridCell.Tab.0.right/0.23.1792.1049@0.23.1792.1049" timestamp="1588654178468" />
-    <state width="1750" height="353" key="GridCell.Tab.0.right/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588684559521" />
+    <state width="1750" height="155" key="GridCell.Tab.0.right/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588772205244" />
     <state width="1750" height="242" key="GridCell.Tab.0.right/265.-811.1130.811/0.23.1792.1049@0.23.1792.1049" timestamp="1588654949812" />
     <state width="1750" height="353" key="GridCell.Tab.1.bottom" timestamp="1588684559522">
       <screen x="0" y="23" width="1792" height="1047" />
@@ -179,14 +168,23 @@
     </state>
     <state width="1750" height="354" key="GridCell.Tab.1.right/0.23.1792.1049@0.23.1792.1049" timestamp="1588653503309" />
     <state width="1750" height="353" key="GridCell.Tab.1.right/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588684559522" />
+    <state x="397" y="185" key="SettingsEditor" timestamp="1588685956794">
+      <screen x="0" y="23" width="1792" height="1047" />
+    </state>
+    <state x="397" y="185" key="SettingsEditor/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588685956794" />
     <state width="896" height="523" key="XDebugger.FullValuePopup" timestamp="1588683209523">
       <screen x="0" y="23" width="1792" height="1047" />
     </state>
     <state width="896" height="523" key="XDebugger.FullValuePopup/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588683209523" />
-    <state x="679" y="512" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1588500582755">
-      <screen x="0" y="23" width="1792" height="1049" />
+    <state x="679" y="511" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1588769577179">
+      <screen x="0" y="23" width="1792" height="1047" />
     </state>
     <state x="679" y="512" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1792.1049@0.23.1792.1049" timestamp="1588500582755" />
+    <state x="679" y="511" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588769577179" />
+    <state x="574" y="342" key="git4idea.merge.GitPullDialog" timestamp="1588759396945">
+      <screen x="0" y="23" width="1792" height="1047" />
+    </state>
+    <state x="574" y="342" key="git4idea.merge.GitPullDialog/265.-811.1130.811/0.23.1792.1047@0.23.1792.1047" timestamp="1588759396945" />
     <state x="736" y="189" key="refactoring.ChangeSignatureDialog" timestamp="1588241161978">
       <screen x="0" y="23" width="1792" height="1051" />
     </state>
@@ -198,6 +196,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AI_Naruto$AI_Naruto.coverage" NAME="AI ASS2 Coverage Results" MODIFIED="1588598298219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.." />
+    <SUITE FILE_PATH="coverage/AI_Naruto$run_partB.coverage" NAME="run partB Coverage Results" MODIFIED="1588772359007" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../2020-part-B/referee" />
     <SUITE FILE_PATH="coverage/AI_Naruto$AI_ASS2.coverage" NAME="run partB Coverage Results" MODIFIED="1588684432701" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../2020-part-B/referee" />
     <SUITE FILE_PATH="coverage/AI_Naruto$referee_help.coverage" NAME="referee help Coverage Results" MODIFIED="1588653618743" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../player" />
   </component>
