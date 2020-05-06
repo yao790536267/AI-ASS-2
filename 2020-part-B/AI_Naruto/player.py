@@ -195,6 +195,11 @@ class State:
         opponent_token_average_x = 0
         opponent_token_average_y = 0
 
+        if len(self.opponent_tokens) == 0:
+            return 999
+        if len(self.my_tokens) == 0:
+            return -999
+
         for key in self.my_tokens.keys():
             my_token_number += self.my_tokens[key]
             x, y = key
