@@ -1,10 +1,5 @@
-import sys
-import json
 import queue
-import time
 import AI_Naruto.util as util
-
-from collections import Counter
 
 STEP_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1)]
 BOOM_DIRECTIONS = [(-1, +0), (+1, +0), (+0, -1), (+0, +1), (-1, +1), (+1, +1), (+1, -1), (-1, -1)]
@@ -64,36 +59,6 @@ class State:
         self.my_tokens = my_tokens.copy()
         self.opponent_tokens = opponent_tokens.copy()
 
-        # self.tokens = Counter({xy:0 for xy in ALL_SQUARES})
-        # for qr in self.black_tokens:
-        #     self.tokens[qr] = -self.black_tokens[qr]
-        # for qr in self.white_tokens:
-        #     self.tokens[qr] = self.white_tokens[qr]
-
-    # def __init__(self, board, white_tokens, black_tokens, actioned_color):
-    #
-    #     self.board = board
-    #     self.black_tokens = black_tokens.copy()
-    #     self.white_tokens = white_tokens.copy()
-    #
-    #     self.actioned_color = actioned_color
-    #     if actioned_color == "white":
-    #         self.next_action_color = "black"
-    #     else:
-    #         self.next_action_color = "white"
-    #
-    #     self.tokens = Counter({xy:0 for xy in ALL_SQUARES})
-    #     for qr in self.black_tokens:
-    #         self.tokens[qr] = -self.black_tokens[qr]
-    #     for qr in self.white_tokens:
-    #         self.tokens[qr] = self.white_tokens[qr]
-
-    # def enemy_occupied(self, qr, enemy_color):
-    #     if enemy_color == 'black':
-    #         return qr in self.black_tokens
-    #     else: #"black"
-    #         return qr in self.my_tokens
-
     def opponent_occupied(self, qr):
         return qr in self.opponent_tokens
 
@@ -101,13 +66,6 @@ class State:
         """
         Get all legal next actions a white token can do.
         """
-        # if color == "white":
-        #     enemy_color = "black"
-        #     my_tokens = self.my_tokens.copy()
-        # else:
-        #     enemy_color = "white"
-        #     my_tokens = self.black_tokens.copy()
-
         legal_actions = []
         for qr in self.my_tokens:
             for step_directions_q, step_directions_r in STEP_DIRECTIONS:
@@ -187,7 +145,6 @@ class State:
         return new_state
 
     def evaluation(self):
-        score = 0
         my_token_number = 0
         opponent_token_number = 0
         my_token_average_x = 0
@@ -222,7 +179,7 @@ class State:
         distance = (my_token_average_x - opponent_token_average_x) * (my_token_average_x - opponent_token_average_x) \
                    + (my_token_average_y - opponent_token_average_y) * (my_token_average_y - opponent_token_average_y)
 
-        score = my_token_number + (12 - opponent_token_number) - 0.1*distance
+        score = 1 * my_token_number + 1 * (12 - opponent_token_number) - 0.01 * distance
         return score
 
 
@@ -268,21 +225,11 @@ class AI_NarutoPlayer:
 
         self.board = Board(self.color)
 
-        # if(self.color == 'white'):
-        #     self.opponent_color = 'black'
-        #     self.init_my_tokens = white
-        #     self.init_opponent_tokens = black
-        # else:
-        #     self.opponent_color = 'white'
-        #     self.init_my_tokens = black
-        #     self.init_opponent_tokens = white
-
         self.init_my_tokens = white
         self.init_opponent_tokens = black
         # initialise state
         # White tokens go first
         self.state = State('white', self.board, self.init_my_tokens, self.init_opponent_tokens)
-        #self.state.print_board()
 
     def action(self):
         """
@@ -344,68 +291,6 @@ class AI_NarutoPlayer:
         else:
             self.state = self.state.successor_state(action)
 
-    # def get_possible_moves(self, token):
-    #     possible_moves = []
-    #     for step_directions_q, step_directions_r in STEP_DIRECTIONS:
-    #         p = self.my_tokens.get(token)
-    #         q, r = token
-    #         for i in range(1, p + 1):
-    #             q_next = q + step_directions_q * i
-    #             r_next = r + step_directions_r * i
-    #             qr_next = q_next, r_next
-    #             if qr_next in self.board:
-    #                 if not self.enemy_occupied(qr_next):
-    #                     # move i tokens from qr to qr_next, the remaining number of token in (q, r) will be p-i
-    #                     possible_moves.append(("MOVE", (i, token, qr_next)))
-    #     # possible_moves.append(("BOOM", token))
-    #
-    #     return possible_moves
-
-    # def evaluation_function(self, last_state, current_state):
-    #     old_my_tokens = last_state.my_tokens
-    #     new_my_tokens = current_state.opponent_tokens
-    #     old_opponent_tokens = last_state.opponent_tokens
-    #     new_opponent_tokens = current_state.my_tokens
-    #
-    #     old_opponent_token_number = 0
-    #     new_opponent_token_number = 0
-    #     for key in old_opponent_tokens.keys():
-    #         old_opponent_token_number += old_opponent_tokens[key]
-    #
-    #     for key in new_opponent_tokens.keys():
-    #         new_opponent_token_number += new_opponent_tokens[key]
-    #
-    #     #change_of_opponent_tokens = len(old_opponent_tokens) - len(new_opponent_tokens)         #feature 1
-    #     change_of_opponent_tokens = old_opponent_token_number - new_opponent_token_number
-    #
-    #     # feature 2
-    #     min_distance_difference = 0
-    #     changed_keys_my = old_my_tokens.keys() - new_my_tokens.keys()
-    #     min_distance_difference1 = 0
-    #     if len(changed_keys_my) > 0:
-    #         for token in changed_keys_my:
-    #             old_min_distance = sys.maxsize
-    #             for oppo_token in old_opponent_tokens:
-    #                 distance = self.manhatten_distance(token, oppo_token)
-    #                 if distance < old_min_distance:
-    #                     old_min_distance = distance
-    #             min_distance_difference1 += old_min_distance
-    #
-    #     changed_keys2_my = new_my_tokens.keys() - old_my_tokens.keys()
-    #     min_distance_difference2 = 0
-    #     if len(changed_keys2_my) > 0:
-    #         for token in changed_keys2_my:
-    #             old_min_distance = sys.maxsize
-    #             for oppo_token in old_opponent_tokens:
-    #                 distance = self.manhatten_distance(token, oppo_token)
-    #                 if distance < old_min_distance:
-    #                     old_min_distance = distance
-    #             min_distance_difference2 += old_min_distance
-    #     min_distance_difference = min_distance_difference1 - min_distance_difference2
-    #
-    #     value = 100 * change_of_opponent_tokens + -1 * min_distance_difference
-    #     return value
-
     def manhatten_distance(self, token, token2):
         x, y = token
         x2, y2 = token2
@@ -417,10 +302,16 @@ class AI_NarutoPlayer:
         current_depth += 1
 
         #detect game over state
-        if len(current_state.opponent_tokens) == 0:
-            return 999
-        if len(current_state.my_tokens) == 0:
-            return -999
+        if self.color == current_state.color:
+            if len(current_state.opponent_tokens) == 0:
+                return 999
+            if len(current_state.my_tokens) == 0:
+                return -999
+        else:
+            if len(current_state.opponent_tokens) == 0:
+                return -999
+            if len(current_state.my_tokens) == 0:
+                return 999
 
         # record actions in a path
         moves = []
@@ -428,7 +319,6 @@ class AI_NarutoPlayer:
         # if max depth is reached
         if current_depth == MAX_DEPTH:
             # apply evaluation function
-            #return self.evaluation_function(last_state, current_state)
             return current_state.evaluation()
 
         if current_depth % 2 == 0:
@@ -436,8 +326,6 @@ class AI_NarutoPlayer:
             legal_actions = current_state.get_legal_actions()
 
             for action in legal_actions:
-                # current_state = current_state.successor_state(action)
-                # new_state = State(current_state.opponent_color, current_state.board, current_state.opponent_tokens, current_state.my_tokens)
                 # alpha beta pruning
                 if alpha < beta:
                     moves.append(action)
@@ -466,52 +354,3 @@ class AI_NarutoPlayer:
                     if alpha < current_evaluation_value:
                         alpha = current_evaluation_value
             return alpha
-
-        # if current_depth % 2 == 0:
-        #     # min player's turn
-        #     # loop all enemy pieces of our player
-        #     remaining_pieces = self.enemies
-        #     for token in remaining_pieces:
-        #         posible_actions = self.get_possible_moves(token)
-        #         #check if the piece can move
-        #         if len(posible_actions) == 0:
-        #             continue
-        #         else:
-        #             for new_pos in posible_actions:
-        #                 old_pos = token.pos
-        #                 #alpha beta pruning
-        #                 if alpha < beta:
-        #                     # move the piece into the aim square
-        #                     eliminated_pieces = token.makemove(new_pos)
-        #                     current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
-        #                     # undo move
-        #                     token.undomove(old_pos, eliminated_pieces)
-        #                     #update beta
-        #                     if beta > current_heuristic:
-        #                         beta = current_heuristic
-        #     return beta
-        # else:
-        #     #max player's turn
-        #     #loop all friend pieces of our player
-        #     remaing_pieces = [p for p in self.friend_pieces() if p.alive]
-        #     for token in remaing_pieces:
-        #         possible_moves = token.moves()
-        #         #check if this piece can move
-        #         if len(possible_moves) == 0:
-        #             continue
-        #         else:
-        #             for new_pos in possible_moves:
-        #                 #record old_pos for undo
-        #                 old_pos = token.pos
-        #                 #do alpha beta pruning
-        #                 if alpha < beta:
-        #                     #move the piece into the aim square
-        #                     eliminated_pieces = token.makemove(new_pos)
-        #                     current_heuristic = self.alphabeta(new_pos, current_depth, alpha, beta)
-        #                     #undo move
-        #                     token.undomove(old_pos, eliminated_pieces)
-        #                     #update alpha
-        #                     if alpha < current_heuristic:
-        #                         alpha = current_heuristic
-        #     return alpha
-
