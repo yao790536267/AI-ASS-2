@@ -11,7 +11,7 @@ BLACK_INITIAL_SQUARES = [(0, 7), (1, 7), (3, 7), (4, 7), (6, 7), (7, 7),
 WHITE_INITIAL_SQUARES = [(0, 1), (1, 1), (3, 1), (4, 1), (6, 1), (7, 1),
                          (0, 0), (1, 0), (3, 0), (4, 0), (6, 0), (7, 0)]
 
-MAX_DEPTH = 5  # the maximum depth that minimax algorithm explores
+MAX_DEPTH = 3  # the maximum depth that minimax algorithm explores
 
 
 def _NEAR_SQUARES(square):
